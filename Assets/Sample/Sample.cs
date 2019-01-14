@@ -1,30 +1,28 @@
-﻿namespace AssetBundle
+﻿using UnityEngine;
+using UnityEngine.UI;
+using AssetBundle;
+
+public class Sample : MonoBehaviour
 {
-    using UnityEngine;
-    using UnityEngine.UI;
+    [SerializeField]
+    private RawImage DownloadedImage = null;
 
-    public class Sample : MonoBehaviour
+    private Texture Texture = null;
+
+    private string ResourcePath = "SampleTexture";
+
+    public void OnClickResoureLoad()
     {
-        [SerializeField]
-        private RawImage DownloadedImage = null;
+        Texture = UnityEngine.Resources.Load(ResourcePath) as Texture;
 
-        private Texture Texture = null;
-
-        private string ResourcePath = "SampleTexture";
-
-        public void OnClickResoureLoad()
+        if (Texture != null)
         {
-            Texture = UnityEngine.Resources.Load(ResourcePath) as Texture;
-
-            if (Texture != null)
-            {
-                DownloadedImage.texture = Texture;
-            }
+            DownloadedImage.texture = Texture;
         }
+    }
 
-        public void OnClickResourceUnload()
-        {
-            UnityEngine.Resources.UnloadAsset(Texture);
-        }
+    public void OnClickResourceUnload()
+    {
+        UnityEngine.Resources.UnloadAsset(Texture);
     }
 }
