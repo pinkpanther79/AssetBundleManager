@@ -5,13 +5,34 @@
     using UnityEngine;
     using UnityEngine.Networking;
 
-    public class AssetBundleManager : MonoBehaviour
+    public enum eVariantType
     {
-        public static AssetBundleManager Instance;
+        hd = 0,
+        sd,
+    }
+
+    public class AssetBundleManager : Singleton<AssetBundleManager>
+    {
         public static bool UseAssetBundle = false;
         public static bool Initialized = false;
 
         private static Dictionary<string, AssetBundle> m_AssetBundles = new Dictionary<string, AssetBundle>();
+
+        private static eVariantType m_VariantType = eVariantType.hd;
+        public static eVariantType VariantType
+        {
+            get
+            {
+                return m_VariantType;
+            }
+
+            set
+            {
+                m_VariantType = value;
+
+                PlayerPrefs.SetInt("VariantType", System.Convert.ToInt32(value));
+            }
+        }
 
         private AssetBundleManifest m_AssetManifest = null;
 
@@ -23,32 +44,9 @@
                 m_DownloadURL = value;
             }
         }
-
-        private static System.Action m_FailedDownload = null;
-        public static System.Action onFailedDownload
-        {
-            set
-            {
-                m_FailedDownload = value;
-            }
-        }
-
-        private static System.Action m_SuccessDownload = null;
-        public static System.Action SuccessDownload
-        {
-            set
-            {
-                m_SuccessDownload = value;
-            }
-        }
-
-        private long m_CacheSize = 4L * 1024L * 1024L * 1024L;
-
-        internal void OnAwake()
-        {
-            Instance = this;
-        }
-
+        
+        private const long m_CacheSize = 4L * 1024L * 1024L * 1024L;
+        
         public IEnumerator Initialize(System.Action<bool> callback)
         {
             Debug.LogFormat("Start AssetBundle Manager : Initialize {0}", Time.frameCount);
@@ -74,7 +72,7 @@
             string[] bundleNames = m_AssetManifest.GetAllAssetBundles();
             for (int i = 0; i < bundleNames.Length; i++)
             {
-                if (GetLoadedBundle(bundleNames[i]).IsNull())
+                if (GetLoadedBundle(RemapVariantName(bundleNames[i])).IsNull())
                 {
                     string url = string.Format("{0}/{1}", m_DownloadURL, bundleNames[i]);
 
@@ -96,7 +94,7 @@
             {
                 foreach (var bundleName in bundleNames)
                 {
-                    yield return DownloadBundle(bundleName);
+                    yield return DownloadBundle(RemapVariantName(bundleName));
                 }
             }
             else
@@ -107,6 +105,8 @@
 
         public IEnumerator DownloadBundle(string bundleName, System.Action<AssetBundle> callback)
         {
+            bundleName = RemapVariantName(bundleName);
+
             AssetBundle bundle = null;
 
             if (GetLoadedBundle(bundleName).IsNull())
@@ -233,7 +233,7 @@
         private void InsertBundle(string bundleName, AssetBundle bundle)
         {
             Debug.LogFormat("m_AssetBundles.Add({0}) : {1}", bundleName, m_AssetManifest.GetAssetBundleHash(bundleName));
-
+            
             if (m_AssetBundles.ContainsKey(bundleName))
             {
                 if (m_AssetBundles[bundleName].IsNotNull())
@@ -245,6 +245,42 @@
             }
 
             m_AssetBundles.Add(bundleName, bundle);
+        }
+        
+        private string RemapVariantName(string assetBundleName)
+        {
+            string[] bundlesWithVariant = m_AssetManifest.GetAllAssetBundlesWithVariant();
+                
+            if (System.Array.IndexOf(bundlesWithVariant, assetBundleName) < 0)
+            {
+                return assetBundleName;
+            }
+
+            string[] split = assetBundleName.Split('.');
+
+            int bestFit = int.MaxValue;
+            int bestFitIndex = -1;
+                
+            for (int i = 0; i < bundlesWithVariant.Length; i++)
+            {
+                string[] curSplit = bundlesWithVariant[i].Split('.');
+                if (curSplit[0] == split[0])
+                {
+                    int found = VariantType.ToString().IndexOf(curSplit[1]);
+                    if (found != -1 && found < bestFit)
+                    {
+                        bestFit = found;
+                        bestFitIndex = i;
+                    }
+                }
+            }
+
+            if (bestFitIndex != -1)
+            {
+                return bundlesWithVariant[bestFitIndex];
+            }
+
+            return assetBundleName;
         }
     }
 }
