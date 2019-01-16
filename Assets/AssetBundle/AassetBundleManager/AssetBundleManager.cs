@@ -5,43 +5,20 @@
     using UnityEngine;
     using UnityEngine.Networking;
 
-    public enum eVariantType
-    {
-        hd = 0,
-        sd,
-    }
+
 
     public class AssetBundleManager : Singleton<AssetBundleManager>
     {
-        public static bool UseAssetBundle = false;
-        public static bool Initialized = false;
-
         private static Dictionary<string, AssetBundle> m_AssetBundles = new Dictionary<string, AssetBundle>();
-
-        private static eVariantType m_VariantType = eVariantType.hd;
-        public static eVariantType VariantType
-        {
-            get
-            {
-                return m_VariantType;
-            }
-
-            set
-            {
-                m_VariantType = value;
-
-                PlayerPrefs.SetInt("VariantType", System.Convert.ToInt32(value));
-            }
-        }
-
+        
         private AssetBundleManifest m_AssetManifest = null;
 
-        private string m_DownloadURL = string.Empty;
-        public string DownloadURL
+        private string m_BaseUri = string.Empty;
+        public string BaseUri
         {
             set
             {
-                m_DownloadURL = value;
+                m_BaseUri = value;
             }
         }
         
@@ -51,7 +28,7 @@
         {
             Debug.LogFormat("Start AssetBundle Manager : Initialize {0}", Time.frameCount);
 
-            if (UseAssetBundle || Application.isMobilePlatform)
+            if (AssetBundleUtility.UseAssetBundle || Application.isMobilePlatform)
             {
                 CheckCacheSize();
 
@@ -74,7 +51,7 @@
             {
                 if (GetLoadedBundle(RemapVariantName(bundleNames[i])).IsNull())
                 {
-                    string url = string.Format("{0}/{1}", m_DownloadURL, bundleNames[i]);
+                    string url = string.Format("{0}/{1}", m_BaseUri, bundleNames[i]);
 
                     bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(bundleNames[i]));
 
@@ -111,7 +88,7 @@
 
             if (GetLoadedBundle(bundleName).IsNull())
             {
-                string url = string.Format("{0}/{1}", m_DownloadURL, bundleName);
+                string url = string.Format("{0}/{1}", m_BaseUri, bundleName);
 
                 bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(bundleName));
 
@@ -156,7 +133,7 @@
 
         private IEnumerator MakeBundleManifest()
         {
-            string url = string.Format("{0}/{1}?{2}", m_DownloadURL, AssetBundleUtility.GetPlatformForAssetBundles(Application.platform), Random.Range(0, 99999));
+            string url = string.Format("{0}/{1}?{2}", m_BaseUri, AssetBundleUtility.GetPlatformForAssetBundles(Application.platform), Random.Range(0, 99999));
 
             using (UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(url))
             {
@@ -179,7 +156,7 @@
         {
             if (GetLoadedBundle(bundleName).IsNull())
             {
-                string url = string.Format("{0}/{1}", m_DownloadURL, bundleName);
+                string url = string.Format("{0}/{1}", m_BaseUri, bundleName);
 
                 CacheMarkAsUsed(url, bundleName);
 
@@ -266,7 +243,7 @@
                 string[] curSplit = bundlesWithVariant[i].Split('.');
                 if (curSplit[0] == split[0])
                 {
-                    int found = VariantType.ToString().IndexOf(curSplit[1]);
+                    int found = AssetBundleUtility.VariantType.ToString().IndexOf(curSplit[1]);
                     if (found != -1 && found < bestFit)
                     {
                         bestFit = found;

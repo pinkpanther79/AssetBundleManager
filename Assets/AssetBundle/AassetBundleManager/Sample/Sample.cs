@@ -7,22 +7,16 @@
     public class Sample : MonoBehaviour
     {
         [SerializeField]
-        private RawImage DownloadedImage = null;
-
-        [SerializeField]
         private Text LogText = null;
 
         [SerializeField]
-        private string DownloadUrl = string.Empty;
-
-        private Texture Texture = null;
-        private string ResourcePath = "SampleTexture";
-
+        private string BaseUri = string.Empty;
+        
         private void Start()
         {
-            AssetBundleManager.Instance.DownloadURL = DownloadUrl;
+            AssetBundleManager.Instance.BaseUri = BaseUri;
 
-            InsertLogText(string.Format("Set DownloadURL {0}", DownloadUrl));
+            InsertLogText(string.Format("Set DownloadURL {0}", BaseUri));
         }
 
         public void OnClickInit()

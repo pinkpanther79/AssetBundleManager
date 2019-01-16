@@ -12,7 +12,7 @@ namespace AssetBundle
             }
         }
 
-        internal virtual void Awake()
+        protected virtual void Awake()
         {
             if (m_Instance.IsNull())
             {
