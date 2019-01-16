@@ -1,0 +1,53 @@
+ManifestFileVersion: 0
+CRC: 1119035448
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: df035381b4d9b58de8150fd9918b4eae
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 2940278b84fef6ccd64046e2049189be
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 20
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 23
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 33
+  Script: {instanceID: 0}
+- Class: 43
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 81
+  Script: {instanceID: 0}
+- Class: 89
+  Script: {instanceID: 0}
+- Class: 90
+  Script: {instanceID: 0}
+- Class: 92
+  Script: {instanceID: 0}
+- Class: 95
+  Script: {instanceID: 0}
+- Class: 104
+  Script: {instanceID: 0}
+- Class: 108
+  Script: {instanceID: 0}
+- Class: 124
+  Script: {instanceID: 0}
+- Class: 157
+  Script: {instanceID: 0}
+- Class: 258
+  Script: {instanceID: 0}
+Assets:
+- Assets/AssetBundle/AssetBundleManager/Sample/Assets/Scenes/TanksExample.unity
+Dependencies:
+- F:/AssetBundleManager/AssetBundles/Android/tanks

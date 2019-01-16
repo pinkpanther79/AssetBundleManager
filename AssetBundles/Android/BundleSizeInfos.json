@@ -1,0 +1,40 @@
+{
+    "array": [
+        {
+            "BundleName": "Android",
+            "BundleSize": 1168
+        },
+        {
+            "BundleName": "BundleSizeInfos.json",
+            "BundleSize": 124
+        },
+        {
+            "BundleName": "logo.hd",
+            "BundleSize": 54443
+        },
+        {
+            "BundleName": "logo.sd",
+            "BundleSize": 7243
+        },
+        {
+            "BundleName": "myassets.hd",
+            "BundleSize": 139209
+        },
+        {
+            "BundleName": "myassets.sd",
+            "BundleSize": 39901
+        },
+        {
+            "BundleName": "scenes",
+            "BundleSize": 24292
+        },
+        {
+            "BundleName": "tanks",
+            "BundleSize": 1710763
+        },
+        {
+            "BundleName": "textures",
+            "BundleSize": 3770808
+        }
+    ]
+}
