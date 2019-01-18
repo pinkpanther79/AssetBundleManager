@@ -7,8 +7,7 @@
     
     public class AssetBundleManager : Singleton<AssetBundleManager>
     {
-        private static Dictionary<string, AssetBundle> m_AssetBundles = new Dictionary<string, AssetBundle>();
-        
+        private Dictionary<string, AssetBundle> m_AssetBundles = new Dictionary<string, AssetBundle>();
         private AssetBundleManifest m_AssetManifest = null;
         private BundleSizeInfo[] m_BundleSizeInfos = null;
 
@@ -121,6 +120,56 @@
             callback(bundle);
         }
 
+        public double CapacityDownloadBundle(string[] bundleName)
+        {
+            double totalSize = 0;
+            foreach (var name in bundleName)
+            {
+                totalSize = DownloadCapacity(name);
+            }
+
+            return totalSize;
+        }
+
+        public double CapacityVariantBundles(AssetBundleUtility.eVariantType variantType)
+        {
+            BundleSizeInfo[] infos = System.Array.FindAll(m_BundleSizeInfos, (info) =>
+            {
+                return info.BundleName.Contains(string.Format(".{0}", variantType.ToString()));
+            });
+
+            double TotalLength = 0;
+            foreach (var info in infos)
+            {
+                TotalLength += info.BundleSize;
+            }
+
+            return System.Math.Round(System.Convert.ToDouble((TotalLength / 1024) / 1024));
+        }
+
+        private double DownloadCapacity(string bundleName)
+        {
+            string findBundleName = RemapVariantName(bundleName);
+            string url = string.Format("{0}/{1}", m_BaseUri, findBundleName);
+
+            bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(findBundleName));
+
+            if (isCaching.IsFalse())
+            {
+                BundleSizeInfo sizeinfo = System.Array.Find(m_BundleSizeInfos, (info) =>
+                {
+                    return info.BundleName.Equals(bundleName);
+                });
+
+                if (sizeinfo.IsNotNull())
+                {
+                    return System.Math.Round(System.Convert.ToDouble((sizeinfo.BundleSize / 1024) / 1024));
+                }
+            }
+
+            return 0;
+        }
+        
         private void CheckCacheSize()
         {
             if (PlayerPrefs.GetString("maximumAvailableDiskSpace").IsNullOrEmpty())
