@@ -42,5 +42,8 @@ StyleCopViolations.xml
 # Server
 for.client
 .vscode
-/Develop/1.Client/alpha_2nd/Settings.StyleCop
-/Develop/1.Client/alpha_2nd/StyleCop.Cache
+
+# Add Work Files
+/AssetBundles
+/*.StyleCop
+/StyleCop.Cache
