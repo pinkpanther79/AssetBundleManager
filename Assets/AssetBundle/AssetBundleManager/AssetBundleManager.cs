@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using UnityEngine;
     using UnityEngine.Networking;
-    
+
     public class AssetBundleManager : Singleton<AssetBundleManager>
     {
         private Dictionary<string, AssetBundle> m_AssetBundles = new Dictionary<string, AssetBundle>();
@@ -19,6 +19,14 @@
                 m_BaseUri = value;
             }
         }
+
+        private bool Initialized
+        {
+            get
+            {
+                return m_AssetManifest.IsNotNull();
+            }
+        }
         
         private const long m_CacheSize = 4L * 1024L * 1024L * 1024L;
         
@@ -26,7 +34,7 @@
         {
             Debug.LogFormat("Start AssetBundle Manager : Initialize {0}", Time.frameCount);
 
-            if (AssetBundleUtility.UseAssetBundle || Application.isMobilePlatform)
+            if (Application.isMobilePlatform)
             {
                 CheckCacheSize();
 
@@ -40,10 +48,8 @@
             Debug.LogFormat("End AssetBundle Manager : Initialize {0}", Time.frameCount);
         }
 
-        public void NeedDownloadList(System.Action<List<string>> callback)
+        public string[] NeedDownloadList()
         {
-            Debug.Assert(m_AssetManifest.IsNotNull(), "Manifest is Null!! Need Initialize");
-
             List<string> needDownladBundles = new List<string>();
 
             string[] bundleNames = m_AssetManifest.GetAllAssetBundles();
@@ -62,7 +68,7 @@
                 }
             }
 
-            callback(needDownladBundles);
+            return needDownladBundles.ToArray();
         }
 
         public IEnumerator DownloadBundles(string[] bundleNames, System.Action<bool> callback)

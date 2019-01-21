@@ -36,14 +36,36 @@
             }));
         }
 
-        public void OnDownloadBundles()
+        public void OnDownloadAllBundles()
         {
-            AssetBundleManager.Instance.NeedDownloadList((list) =>
-            {
-                InsertLogText(string.Format("Need Download List Count : {0}", list.Count));
+            string[] downloadList = AssetBundleManager.Instance.NeedDownloadList();
 
-                List<string> downloadList = list;
+            AssetBundleManager.Instance.DownloadBundles(downloadList, (success) =>
+            {
+                if (success)
+                {
+                    /// TODO : insert after actions
+                }
+                else
+                {
+                    /// TODO : insert retry actions
+                }
             });
+        }
+
+        public void OnDownloadBundle()
+        {
+            StartCoroutine(AssetBundleManager.Instance.DownloadBundle("BundleName", (success) =>
+            {
+                if (success)
+                {
+                    /// TODO : insert after actions
+                }
+                else
+                {
+                    /// TODO : insert retry actions
+                }
+            }));
         }
 
         public void OnClickBundleLoad()
