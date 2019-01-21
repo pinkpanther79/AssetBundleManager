@@ -30,22 +30,9 @@
         
         private const long m_CacheSize = 4L * 1024L * 1024L * 1024L;
         
-        public IEnumerator Initialize(System.Action<bool> callback)
+        public void Initialize(System.Action<bool> callback)
         {
-            Debug.LogFormat("Start AssetBundle Manager : Initialize {0}", Time.frameCount);
-
-            if (Application.isMobilePlatform)
-            {
-                CheckCacheSize();
-
-                yield return StartCoroutine(MakeBundleManifest());
-
-                yield return StartCoroutine(MakeBundleSizeInfos());
-            }
-
-            callback(m_AssetManifest.IsNotNull() && m_BundleSizeInfos.IsNotNull());
-
-            Debug.LogFormat("End AssetBundle Manager : Initialize {0}", Time.frameCount);
+            StartCoroutine(StartInitialize(callback));
         }
 
         public string[] NeedDownloadList()
@@ -69,61 +56,6 @@
             }
 
             return needDownladBundles.ToArray();
-        }
-
-        public IEnumerator DownloadBundles(string[] bundleNames, System.Action<bool> callback)
-        {
-            if (bundleNames.NotEmpty())
-            {
-                foreach (var bundleName in bundleNames)
-                {
-                    yield return DownloadBundle(RemapVariantName(bundleName));
-                }
-            }
-            else
-            {
-                Debug.LogError("bundleNames is Empty!!");
-            }
-        }
-
-        public IEnumerator DownloadBundle(string bundleName, System.Action<AssetBundle> callback)
-        {
-            bundleName = RemapVariantName(bundleName);
-
-            AssetBundle bundle = null;
-
-            if (GetLoadedBundle(bundleName).IsNull())
-            {
-                string url = string.Format("{0}/{1}", m_BaseUri, bundleName);
-
-                bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(bundleName));
-
-                if (isCaching)
-                {
-                    Caching.MarkAsUsed(url, m_AssetManifest.GetAssetBundleHash(bundleName));
-                }
-
-                using (UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(url, m_AssetManifest.GetAssetBundleHash(bundleName), 0))
-                {
-                    yield return www.SendWebRequest();
-
-                    bool isSuccess = !www.isNetworkError;
-                    if (isSuccess && www.responseCode == 200)
-                    {
-                        bundle = DownloadHandlerAssetBundle.GetContent(www);
-
-                        InsertBundle(bundleName, bundle);
-
-                        yield return LoadDependencies(bundleName);
-                    }
-                }
-            }
-            else
-            {
-                bundle = GetLoadedBundle(bundleName);
-            }
-
-            callback(bundle);
         }
 
         public double CapacityDownloadBundle(string[] bundleName)
@@ -153,6 +85,87 @@
             return System.Math.Round(System.Convert.ToDouble((TotalLength / 1024) / 1024));
         }
 
+        public void DownloadBundles(string[] bundleNames, System.Action callback)
+        {
+            if (bundleNames.NotEmpty())
+            {
+                StartCoroutine(StartDownloadBundles(bundleNames, callback));
+            }
+            else
+            {
+                Debug.LogError("bundleNames is Empty!!");
+            }
+        }
+
+        public void DownloadBundle(string bundleName, System.Action<AssetBundle> callback)
+        {
+            bundleName = RemapVariantName(bundleName);
+            
+            if (GetLoadedBundle(bundleName).IsNull())
+            {
+                StartCoroutine(StartDownloadBundle(bundleName, callback));
+            }
+            else
+            {
+                callback(GetLoadedBundle(bundleName));
+            }
+        }
+
+        private IEnumerator StartInitialize(System.Action<bool> callback)
+        {
+            if (Application.isMobilePlatform)
+            {
+                CheckCacheSize();
+
+                yield return StartCoroutine(MakeBundleManifest());
+
+                yield return StartCoroutine(MakeBundleSizeInfos());
+            }
+
+            callback(m_AssetManifest.IsNotNull() && m_BundleSizeInfos.IsNotNull());
+        }
+
+        private IEnumerator StartDownloadBundles(string[] bundleNames, System.Action callback)
+        {
+            foreach (var bundleName in bundleNames)
+            {
+                yield return DownloadBundle(RemapVariantName(bundleName));
+            }
+
+            callback();
+        }
+
+        private IEnumerator StartDownloadBundle(string bundleName, System.Action<AssetBundle> callback)
+        {
+            string url = string.Format("{0}/{1}", m_BaseUri, bundleName);
+
+            bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(bundleName));
+
+            if (isCaching)
+            {
+                Caching.MarkAsUsed(url, m_AssetManifest.GetAssetBundleHash(bundleName));
+            }
+
+            AssetBundle bundle = null;
+
+            using (UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(url, m_AssetManifest.GetAssetBundleHash(bundleName), 0))
+            {
+                yield return www.SendWebRequest();
+
+                bool isSuccess = !www.isNetworkError;
+                if (isSuccess && www.responseCode == 200)
+                {
+                    bundle = DownloadHandlerAssetBundle.GetContent(www);
+
+                    InsertBundle(bundleName, bundle);
+
+                    yield return LoadDependencies(bundleName);
+                }
+            }
+
+            callback(bundle);
+        }
+
         private double DownloadCapacity(string bundleName)
         {
             string findBundleName = RemapVariantName(bundleName);
@@ -178,7 +191,8 @@
         
         private void CheckCacheSize()
         {
-            if (PlayerPrefs.GetString("maximumAvailableDiskSpace").IsNullOrEmpty())
+            string cacheSize = PlayerPrefs.GetString("maximumAvailableDiskSpace");
+            if (cacheSize.IsNullOrEmpty() && cacheSize.Equals(m_CacheSize.ToString()).IsFalse())
             {
                 Cache cache = Caching.currentCacheForWriting;
                 cache.maximumAvailableStorageSpace = m_CacheSize;

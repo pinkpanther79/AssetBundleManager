@@ -21,7 +21,7 @@
 
         public void OnClickInit()
         {
-            StartCoroutine(AssetBundleManager.Instance.Initialize((success) =>
+            AssetBundleManager.Instance.Initialize((success) =>
             {
                 InsertLogText(string.Format("AssetBundleManager Initialize {0}", success));
 
@@ -33,14 +33,21 @@
                 {
                     /// TODO : insert retry actions
                 }
-            }));
+            });
         }
 
         public void OnDownloadAllBundles()
         {
             string[] downloadList = AssetBundleManager.Instance.NeedDownloadList();
 
-            AssetBundleManager.Instance.DownloadBundles(downloadList, (success) =>
+            AssetBundleManager.Instance.DownloadBundles(downloadList, () =>
+            {
+            });
+        }
+
+        public void OnDownloadBundle()
+        {
+            AssetBundleManager.Instance.DownloadBundle("BundleName", (success) =>
             {
                 if (success)
                 {
@@ -51,21 +58,6 @@
                     /// TODO : insert retry actions
                 }
             });
-        }
-
-        public void OnDownloadBundle()
-        {
-            StartCoroutine(AssetBundleManager.Instance.DownloadBundle("BundleName", (success) =>
-            {
-                if (success)
-                {
-                    /// TODO : insert after actions
-                }
-                else
-                {
-                    /// TODO : insert retry actions
-                }
-            }));
         }
 
         public void OnClickBundleLoad()
