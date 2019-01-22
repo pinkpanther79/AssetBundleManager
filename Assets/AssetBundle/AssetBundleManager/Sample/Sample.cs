@@ -14,16 +14,37 @@
         
         private void Start()
         {
-            AssetBundleManager.Instance.BaseUri = BaseUri;
-
             InsertLogText(string.Format("Set DownloadURL {0}", BaseUri));
         }
 
         public void OnClickInit()
         {
-            AssetBundleManager.Instance.Initialize((success) =>
+            AssetBundleManager.Instance.Initialize(BaseUri, (success) =>
             {
                 InsertLogText(string.Format("AssetBundleManager Initialize {0}", success));
+
+                if (success)
+                {
+                    /// TODO : insert after actions
+                }
+                else
+                {
+                    /// TODO : insert retry actions
+                }
+            });
+        }
+
+        public void OnDownloadBundle()
+        {
+            string bundleName = "BundleName";
+
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(bundleName);
+
+            InsertLogText(string.Format("Download Size : {0}", downloadSize));
+
+            AssetBundleManager.Instance.DownloadBundle(bundleName, (success) =>
+            {
+                InsertLogText(string.Format("Download {0} : {1}", bundleName, success));
 
                 if (success)
                 {
@@ -40,15 +61,14 @@
         {
             string[] downloadList = AssetBundleManager.Instance.NeedDownloadList();
 
-            AssetBundleManager.Instance.DownloadBundles(downloadList, () =>
-            {
-            });
-        }
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundles(downloadList);
 
-        public void OnDownloadBundle()
-        {
-            AssetBundleManager.Instance.DownloadBundle("BundleName", (success) =>
+            InsertLogText(string.Format("Download Size : {0}", downloadSize));
+
+            AssetBundleManager.Instance.DownloadBundles(downloadList, (success) =>
             {
+                InsertLogText(string.Format("DownloadAllBundles {0}", success));
+
                 if (success)
                 {
                     /// TODO : insert after actions

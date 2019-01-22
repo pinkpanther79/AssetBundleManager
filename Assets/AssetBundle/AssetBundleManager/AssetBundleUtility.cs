@@ -17,8 +17,6 @@
 
     public class AssetBundleUtility
     {
-        public static readonly string BundleSizeFileName = "BundleSizeInfos.json";
-
         public enum eVariantType
         {
             hd = 0,

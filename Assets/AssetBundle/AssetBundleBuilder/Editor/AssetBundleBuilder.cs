@@ -10,8 +10,9 @@
         /// TODO : here variable edit
         private static string AssetBundlesOutputPath = "AssetBundles";
         private static string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/AssetBundleManager/Sample/Assets");
-        private static char VariantDelimiter = '-';
         private static string BuiltInfomationFileName = "OriginalAssetBundles.txt";
+        private static string BundleSizeFileName = "BundleSizeInfos.json";
+        private static char VariantDelimiter = '-';
 
         [MenuItem("Assets/AssetBundles/Build AssetBundles For Android")]
         public static void BuildAssetBundlesForAndroid()
@@ -204,7 +205,7 @@
 
         private static string MakeBundleSizeInfoFile()
         {
-            string filePath = Path.Combine(AssetBundlesOutputPath, AssetBundleUtility.BundleSizeFileName);
+            string filePath = Path.Combine(AssetBundlesOutputPath, BundleSizeFileName);
 
             if (File.Exists(filePath))
             {
