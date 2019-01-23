@@ -7,8 +7,7 @@
     {
         public static T[] GetJsonArray<T>(string json)
         {
-            string newJson = "{ \"array\": " + json + "}";
-            Wrapper<T> wrapper = JsonUtility.FromJson<Wrapper<T>>(newJson);
+            Wrapper<T> wrapper = JsonUtility.FromJson<Wrapper<T>>(json);
 
             return wrapper.array;
         }

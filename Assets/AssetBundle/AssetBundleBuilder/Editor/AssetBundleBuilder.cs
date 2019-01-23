@@ -74,6 +74,20 @@
             }
         }
 
+        [MenuItem("Assets/AssetBundles/CleanCache")]
+        public static void CleanCache()
+        {
+            Cache cache = Caching.currentCacheForWriting;
+            if (cache.ClearCache())
+            {
+                EditorUtility.DisplayDialog("Success", "Success to clear cache.", "ok");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Failed", "Failed to clear cache.", "ok");
+            }
+        }
+
         private static void ApplyAssetLabels()
         {
             UpdateResourceAssetLabels();

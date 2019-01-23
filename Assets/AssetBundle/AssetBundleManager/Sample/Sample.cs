@@ -11,7 +11,10 @@
 
         [SerializeField]
         private string BaseUri = string.Empty;
-        
+
+        [SerializeField]
+        private string AssetBundleName = string.Empty;
+
         private void Start()
         {
             InsertLogText(string.Format("Set DownloadURL {0}", BaseUri));
@@ -36,17 +39,15 @@
 
         public void OnDownloadBundle()
         {
-            string bundleName = "BundleName";
-
-            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(bundleName);
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(AssetBundleName);
 
             InsertLogText(string.Format("Download Size : {0}", downloadSize));
 
-            AssetBundleManager.Instance.DownloadBundle(bundleName, (success) =>
+            AssetBundleManager.Instance.DownloadBundle(AssetBundleName, (bundle) =>
             {
-                InsertLogText(string.Format("Download {0} : {1}", bundleName, success));
+            InsertLogText(string.Format("Download {0} : {1}", AssetBundleName, bundle.IsNotNull()));
 
-                if (success)
+                if (bundle.IsNotNull())
                 {
                     /// TODO : insert after actions
                 }

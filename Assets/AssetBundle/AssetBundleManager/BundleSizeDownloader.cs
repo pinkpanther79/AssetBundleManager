@@ -23,18 +23,18 @@
         public override IEnumerator Download()
         {
             BundleSizeInfo[] infos = null;
-            using (UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(m_Url))
+            UnityWebRequest www = new UnityWebRequest(m_Url);
+            www.downloadHandler = new DownloadHandlerBuffer();
+
+            yield return www.SendWebRequest();
+            
+            bool isSuccess = !www.isNetworkError && www.responseCode == 200;
+            if (isSuccess)
             {
-                yield return www.SendWebRequest();
-
-                bool isSuccess = !www.isNetworkError && www.responseCode == 200;
-                if (isSuccess)
-                {
-                    infos = JsonHelper.GetJsonArray<BundleSizeInfo>(www.downloadHandler.text);
-                }
-
-                m_OnComplete(infos);
+                infos = JsonHelper.GetJsonArray<BundleSizeInfo>(www.downloadHandler.text);
             }
+
+            m_OnComplete(infos);
         }
     }
 }

@@ -5,29 +5,36 @@
     using System.Collections.Generic;
     using UnityEngine;
     using UnityEngine.Networking;
-    
+
     public class AssetBundleManager : Singleton<AssetBundleManager>, IDisposable
     {
         private Dictionary<string, AssetBundle> m_AssetBundles = new Dictionary<string, AssetBundle>();
         private AssetBundleManifest m_AssetManifest = null;
         private BundleSizeInfo[] m_BundleSizeInfos = null;
-        public string BaseUri{ get; private set; } = string.Empty;
+        public string BaseUri { get; private set; } = string.Empty;
 
         private bool Initialized
         {
             get
             {
-                return m_AssetManifest.IsNotNull();
+                return m_AssetManifest.IsNotNull() && m_BundleSizeInfos.IsNotNull();
             }
         }
-        
+
         private const long m_CacheSize = 4L * 1024L * 1024L * 1024L;
         
         public void Initialize(string uri, Action<bool> callback)
         {
+            if (Initialized)
+            {
+                BaseUri = string.Empty;
+                m_AssetManifest = null;
+                m_BundleSizeInfos = null;
+            }
+
             MakeBaseUri(uri);
 
-            InternalInitialize(callback);
+            StartCoroutine(InternalInitialize(callback));
         }
 
         private void MakeBaseUri(string baseUri)
@@ -40,18 +47,22 @@
         {
             List<string> needDownladBundles = new List<string>();
 
-            string[] bundleNames = m_AssetManifest.GetAllAssetBundles();
-            foreach (var name in bundleNames)
+            if (Initialized)
             {
-                if (FindLoadedBundle(RemapVariantName(name)).IsNull())
+                string[] bundleNames = m_AssetManifest.GetAllAssetBundles();
+                foreach (var name in bundleNames)
                 {
-                    string url = string.Format("{0}/{1}", BaseUri, name);
-
-                    bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(name));
-
-                    if (isCaching.IsFalse())
+                    string remapName = RemapVariantName(name);
+                    if (FindLoadedBundle(remapName).IsNull())
                     {
-                        needDownladBundles.Add(name);
+                        string url = string.Format("{0}/{1}", BaseUri, remapName);
+
+                        bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(name));
+
+                        if (BundleCached(url, remapName).IsFalse())
+                        {
+                            needDownladBundles.Add(name);
+                        }
                     }
                 }
             }
@@ -61,15 +72,17 @@
 
         public double CapacityDownloadBundle(string bundleName)
         {
-            return DownloadCapacity(bundleName);
+            return DownloadCapacity(RemapVariantName(bundleName));
         }
 
         public double CapacityDownloadBundles(string[] bundleName)
         {
             double totalSize = 0;
+            string remapName = string.Empty;
+
             foreach (var name in bundleName)
             {
-                totalSize = DownloadCapacity(name);
+                totalSize = DownloadCapacity(RemapVariantName(name));
             }
 
             return totalSize;
@@ -93,102 +106,98 @@
 
         public void DownloadBundle(string bundleName, Action<AssetBundle> callback)
         {
-            bundleName = RemapVariantName(bundleName);
-            
-            if (FindLoadedBundle(bundleName).IsNull())
+            if (Initialized)
             {
-                Hash128 hash = m_AssetManifest.GetAssetBundleHash(bundleName);
-                AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, bundleName, hash, (bundle) =>
+                bundleName = RemapVariantName(bundleName);
+
+                if (FindLoadedBundle(bundleName).IsNull())
                 {
-                    if (bundle.IsNotNull())
+                    Hash128 hash = m_AssetManifest.GetAssetBundleHash(bundleName);
+                    AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, bundleName, hash, (bundle) =>
                     {
-                        InsertBundle(bundleName, bundle);
+                        if (bundle.IsNotNull())
+                        {
+                            InsertBundle(bundleName, bundle);
 
-                        callback(bundle);
-                    }
-                });
+                            callback(bundle);
+                        }
+                    });
 
-                StartCoroutine(downloader.Download());
-            }
-            else
-            {
-                callback(FindLoadedBundle(bundleName));
+                    StartCoroutine(downloader.Download());
+                }
+                else
+                {
+                    callback(FindLoadedBundle(bundleName));
+                }
             }
         }
 
         public void DownloadBundleWithDependencies(string bundleName, Action<AssetBundle> callback)
         {
-            bundleName = RemapVariantName(bundleName);
-
-            if (FindLoadedBundle(bundleName).IsNull())
+            if (Initialized)
             {
-                Hash128 hash = m_AssetManifest.GetAssetBundleHash(bundleName);
-                AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, bundleName, hash, (bundle) =>
+                bundleName = RemapVariantName(bundleName);
+
+                if (FindLoadedBundle(bundleName).IsNull())
                 {
-                    if (bundle.IsNotNull())
+                    Hash128 hash = m_AssetManifest.GetAssetBundleHash(bundleName);
+                    AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, bundleName, hash, (bundle) =>
                     {
-                        InsertBundle(bundleName, bundle);
-
-                        string[] dependencies = m_AssetManifest.GetAllDependencies(bundleName);
-                        StartCoroutine(InteralDownloadBundles(dependencies, (success) =>
+                        if (bundle.IsNotNull())
                         {
-                            callback(bundle);
-                        }));
-                    }
-                });
+                            InsertBundle(bundleName, bundle);
 
-                StartCoroutine(downloader.Download());
-            }
-            else
-            {
-                callback(FindLoadedBundle(bundleName));
+                            string[] dependencies = m_AssetManifest.GetAllDependencies(bundleName);
+                            StartCoroutine(InteralDownloadBundles(dependencies, (success) =>
+                            {
+                                callback(bundle);
+                            }));
+                        }
+                    });
+
+                    StartCoroutine(downloader.Download());
+                }
+                else
+                {
+                    callback(FindLoadedBundle(bundleName));
+                }
             }
         }
 
         public void DownloadBundles(string[] bundleNames, Action<bool> callback)
         {
-            if (bundleNames.NotEmpty())
+            if (Initialized)
             {
                 StartCoroutine(InteralDownloadBundles(bundleNames, callback));
-            }
-            else
-            {
-                Debug.LogError("bundleNames is Empty!!");
             }
         }
 
         private IEnumerator InternalInitialize(Action<bool> callback)
         {
-            if (Application.isMobilePlatform)
+            CheckCacheSize();
+
+            ManifestDownloader manifestDownloader = new ManifestDownloader(BaseUri, (manifest) =>
             {
-                CheckCacheSize();
-                
-                ManifestDownloader manifestDownloader = new ManifestDownloader(BaseUri, (manifest) =>
-                {
-                    m_AssetManifest = manifest;
-                });
+                m_AssetManifest = manifest;
+            });
 
-                yield return StartCoroutine(manifestDownloader.Download());
+            yield return StartCoroutine(manifestDownloader.Download());
 
-                BundleSizeDownloader sizeDownloader = new BundleSizeDownloader(BaseUri, (infos) =>
-                {
-                    m_BundleSizeInfos = infos; 
-                });
+            BundleSizeDownloader sizeDownloader = new BundleSizeDownloader(BaseUri, (infos) =>
+            {
+                m_BundleSizeInfos = infos;
+            });
 
-                yield return StartCoroutine(sizeDownloader.Download());
-            }
+            yield return StartCoroutine(sizeDownloader.Download());
 
-            callback(m_AssetManifest.IsNotNull() && m_BundleSizeInfos.IsNotNull());
+            callback(Initialized);
         }
         
         private double DownloadCapacity(string bundleName)
         {
-            string findBundleName = RemapVariantName(bundleName);
-            string url = string.Format("{0}/{1}", BaseUri, findBundleName);
-
-            bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(findBundleName));
-
-            if (isCaching.IsFalse())
+            string url = string.Format("{0}/{1}", BaseUri, bundleName);
+            
+            if (BundleCached(url, bundleName).IsFalse())
             {
                 BundleSizeInfo sizeinfo = Array.Find(m_BundleSizeInfos, (info) =>
                 {
@@ -197,7 +206,7 @@
 
                 if (sizeinfo.IsNotNull())
                 {
-                    return Math.Round(Convert.ToDouble((sizeinfo.BundleSize / 1024) / 1024));
+                    return Math.Round(Convert.ToDouble(sizeinfo.BundleSize / 1024));
                 }
             }
 
@@ -218,36 +227,30 @@
         
         private IEnumerator InteralDownloadBundles(string[] assetBundleNames, Action<bool> callback)
         {
-            if (m_AssetManifest.IsNotNull())
+            foreach (var bundleName in assetBundleNames)
             {
-                if (assetBundleNames.NotEmpty())
+                string remapName = RemapVariantName(bundleName);
+                if (FindLoadedBundle(remapName).IsNull())
                 {
-                    foreach (var bundleName in assetBundleNames)
+                    Hash128 hash = m_AssetManifest.GetAssetBundleHash(remapName);
+                    AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, remapName, hash, (bundle) =>
                     {
-                        string remapName = RemapVariantName(bundleName);
-                        if (FindLoadedBundle(remapName).IsNull())
+                        if (bundle.IsNotNull())
                         {
-                            Hash128 hash = m_AssetManifest.GetAssetBundleHash(remapName);
-                            AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, remapName, hash, (bundle) =>
-                            {
-                                if (bundle.IsNotNull())
-                                {
-                                    InsertBundle(remapName, bundle);
-                                }
-                            });
-
-                            yield return StartCoroutine(downloader.Download());
+                            InsertBundle(remapName, bundle);
                         }
-                    }
+                    });
+
+                    yield return StartCoroutine(downloader.Download());
                 }
             }
+
+            callback(true);
         }
 
         private void CacheMarkAsUsed(string url, string bundleName)
         {
-            bool isCaching = Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(bundleName));
-            
-            if (isCaching)
+            if (BundleCached(url, bundleName))
             {
                 Caching.MarkAsUsed(url, m_AssetManifest.GetAssetBundleHash(bundleName));
             }
@@ -276,7 +279,12 @@
 
             m_AssetBundles.Add(bundleName, bundle);
         }
-        
+
+        private bool BundleCached(string url, string bundleName)
+        {
+            return Caching.IsVersionCached(url, m_AssetManifest.GetAssetBundleHash(bundleName));
+        }
+
         private string RemapVariantName(string assetBundleName)
         {
             string[] bundlesWithVariant = m_AssetManifest.GetAllAssetBundlesWithVariant();

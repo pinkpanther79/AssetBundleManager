@@ -33,6 +33,8 @@
                     if (bundle.IsNotNull())
                     {
                         manifest = bundle.LoadAsset<AssetBundleManifest>("assetbundlemanifest");
+
+                        bundle.Unload(false);
                     }
                 }
 
