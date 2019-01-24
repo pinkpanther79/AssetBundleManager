@@ -4,32 +4,32 @@
     using System.Collections;
     using System.Collections.Generic;
     using UnityEngine;
-
-    internal class DownloadContainer
-    {
-        public string BundleName;
-        public Stack<string> Dependencies;
-        public Action<AssetBundle> OnComplete;
-        
-        public DownloadContainer(string bundleName, string[] dependencies, Action<AssetBundle> onComplete)
-        {
-            Stack<string> stack = new Stack<string>(dependencies);
-
-            BundleName = bundleName;
-            Dependencies = stack;
-            OnComplete = onComplete;
-        }
-
-        public DownloadContainer(string bundleName, Stack<string> dependencies, Action<AssetBundle> onComplete)
-        {
-            BundleName = bundleName;
-            Dependencies = dependencies;
-            OnComplete = onComplete;
-        }
-    }
-
+    
     public class AssetBundleManager : Singleton<AssetBundleManager>, IDisposable
     {
+        internal class DownloadContainer
+        {
+            public string BundleName;
+            public Stack<string> Dependencies;
+            public Action<AssetBundle> OnComplete;
+
+            public DownloadContainer(string bundleName, string[] dependencies, Action<AssetBundle> onComplete)
+            {
+                Stack<string> stack = new Stack<string>(dependencies);
+
+                BundleName = bundleName;
+                Dependencies = stack;
+                OnComplete = onComplete;
+            }
+
+            public DownloadContainer(string bundleName, Stack<string> dependencies, Action<AssetBundle> onComplete)
+            {
+                BundleName = bundleName;
+                Dependencies = dependencies;
+                OnComplete = onComplete;
+            }
+        }
+
         private Dictionary<string, AssetBundle> m_AssetBundles = new Dictionary<string, AssetBundle>();
         
         private AssetBundleManifest m_AssetManifest = null;
@@ -183,6 +183,11 @@
             }
         }
 
+        public void DownloadAssetBundles(string[] bundleNames)
+        {
+
+        }
+
         private void DependenciesDownload(DownloadContainer container)
         {
             if (container.Dependencies.Empty())
@@ -191,15 +196,15 @@
             }
             else
             {
-                string popBundleName = container.Dependencies.Pop();
-                if (DownloadedBundle(popBundleName).IsNull())
+                string targetBundleName = container.Dependencies.Pop();
+                if (DownloadedBundle(targetBundleName).IsNull())
                 {
-                    Hash128 hash = m_AssetManifest.GetAssetBundleHash(popBundleName);
-                    AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, popBundleName, hash, (bundle) =>
+                    Hash128 hash = m_AssetManifest.GetAssetBundleHash(targetBundleName);
+                    AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, targetBundleName, hash, (bundle) =>
                     {
                         if (bundle.IsNotNull())
                         {
-                            InsertBundle(popBundleName, bundle);
+                            InsertBundle(targetBundleName, bundle);
 
                             DependenciesDownload(container);
                         }
