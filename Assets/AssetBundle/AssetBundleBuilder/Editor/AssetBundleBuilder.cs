@@ -9,7 +9,7 @@
     {
         /// TODO : here variable edit
         private static string AssetBundlesOutputPath = "AssetBundles";
-        private static string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/AssetBundleManager/Sample/Assets");
+        private static string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Assets");
         private static string BuiltInfomationFileName = "OriginalAssetBundles.txt";
         private static string BundleSizeFileName = "BundleSizeInfos.json";
         private static char VariantDelimiter = '-';

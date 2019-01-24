@@ -45,7 +45,7 @@
 
             AssetBundleManager.Instance.DownloadBundle(AssetBundleName, (bundle) =>
             {
-            InsertLogText(string.Format("Download {0} : {1}", AssetBundleName, bundle.IsNotNull()));
+            InsertLogText(string.Format("DownloadBundle {0} : {1}", AssetBundleName, bundle.IsNotNull()));
 
                 if (bundle.IsNotNull())
                 {
@@ -58,17 +58,15 @@
             });
         }
 
-        public void OnDownloadAllBundles()
+        public void OnDownloadWithDependencies()
         {
-            string[] downloadList = AssetBundleManager.Instance.NeedDownloadList();
-
-            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundles(downloadList);
-
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(AssetBundleName);
+            
             InsertLogText(string.Format("Download Size : {0}", downloadSize));
 
-            AssetBundleManager.Instance.DownloadBundles(downloadList, (success) =>
+            AssetBundleManager.Instance.DownloadBundleWithDependencies(AssetBundleName, (success) =>
             {
-                InsertLogText(string.Format("DownloadAllBundles {0}", success));
+                InsertLogText(string.Format("DownloadWithDependencies {0}", success));
 
                 if (success)
                 {
@@ -81,16 +79,13 @@
             });
         }
 
-        public void OnClickBundleLoad()
+        public void OnClickDownloadAllBundles()
         {
+            string[] downloadList = AssetBundleManager.Instance.DownloadList();
 
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundles(downloadList);
         }
-
-        public void OnClickBundleUnload()
-        {
-            
-        }
-
+        
         private void InsertLogText(string text)
         {
             LogText.text = LogText.text.Insert(LogText.text.Length, string.Format("{0}\n", text));

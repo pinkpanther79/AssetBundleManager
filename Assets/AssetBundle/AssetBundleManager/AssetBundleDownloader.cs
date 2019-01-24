@@ -30,7 +30,7 @@
             {
                 yield return www.SendWebRequest();
 
-                bool isSuccess = !www.isNetworkError && www.responseCode == 200;
+                bool isSuccess = !www.isNetworkError;
                 if (isSuccess)
                 {
                     bundle = DownloadHandlerAssetBundle.GetContent(www);

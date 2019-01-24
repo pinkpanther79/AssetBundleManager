@@ -596,7 +596,7 @@ GameObject:
   - component: {fileID: 1136963696}
   - component: {fileID: 1136963695}
   m_Layer: 5
-  m_Name: Button_Unload
+  m_Name: Button_AllDownload
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -663,7 +663,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1326718130}
-        m_MethodName: OnClickResourceUnload
+        m_MethodName: OnClickDownloadAllBundles
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -782,7 +782,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Unload
+  m_Text: Download All
 --- !u!222 &1175247797
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -822,7 +822,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LogText: {fileID: 536982688}
   BaseUri: http://mdl.trinitygames.co.kr/FreezingCDN
-  AssetBundleName: textures
+  AssetBundleName: myassets
 --- !u!4 &1326718131
 Transform:
   m_ObjectHideFlags: 0
@@ -850,7 +850,7 @@ GameObject:
   - component: {fileID: 1468505453}
   - component: {fileID: 1468505452}
   m_Layer: 5
-  m_Name: Button_AllDownload
+  m_Name: Button_DownloadWithDependencies
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -917,7 +917,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1326718130}
-        m_MethodName: OnDownloadAllBundles
+        m_MethodName: OnDownloadWithDependencies
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1348,7 +1348,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Download All
+  m_Text: Download With Dependencies
 --- !u!222 &2117191838
 CanvasRenderer:
   m_ObjectHideFlags: 0
