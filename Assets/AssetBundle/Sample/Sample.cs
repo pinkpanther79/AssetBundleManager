@@ -84,6 +84,22 @@
             string[] downloadList = AssetBundleManager.Instance.DownloadList();
 
             double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundles(downloadList);
+
+            InsertLogText(string.Format("Download Size : {0}", downloadSize));
+
+            AssetBundleManager.Instance.DownloadAssetBundles(downloadList, (success) =>
+            {
+                InsertLogText(string.Format("ClickDownloadAllBundles {0}", success));
+
+                if (success)
+                {
+                    /// TODO : insert after actions
+                }
+                else
+                {
+                    /// TODO : insert retry actions
+                }
+            });
         }
         
         private void InsertLogText(string text)

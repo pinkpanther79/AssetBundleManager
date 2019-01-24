@@ -7,29 +7,6 @@
     
     public class AssetBundleManager : Singleton<AssetBundleManager>, IDisposable
     {
-        internal class DownloadContainer
-        {
-            public string BundleName;
-            public Stack<string> Dependencies;
-            public Action<AssetBundle> OnComplete;
-
-            public DownloadContainer(string bundleName, string[] dependencies, Action<AssetBundle> onComplete)
-            {
-                Stack<string> stack = new Stack<string>(dependencies);
-
-                BundleName = bundleName;
-                Dependencies = stack;
-                OnComplete = onComplete;
-            }
-
-            public DownloadContainer(string bundleName, Stack<string> dependencies, Action<AssetBundle> onComplete)
-            {
-                BundleName = bundleName;
-                Dependencies = dependencies;
-                OnComplete = onComplete;
-            }
-        }
-
         private Dictionary<string, AssetBundle> m_AssetBundles = new Dictionary<string, AssetBundle>();
         
         private AssetBundleManifest m_AssetManifest = null;
@@ -93,16 +70,26 @@
 
         public double CapacityDownloadBundle(string bundleName)
         {
-            return DownloadCapacity(RemapVariantName(bundleName));
+            double size = 0;
+
+            if (Initialized)
+            {
+                size = DownloadCapacity(RemapVariantName(bundleName));
+            }
+
+            return size;
         }
 
         public double CapacityDownloadBundles(string[] bundleName)
         {
             double totalSize = 0;
 
-            foreach (var name in bundleName)
+            if (Initialized)
             {
-                totalSize = DownloadCapacity(RemapVariantName(name));
+                foreach (var name in bundleName)
+                {
+                    totalSize = DownloadCapacity(RemapVariantName(name));
+                }
             }
 
             return totalSize;
@@ -110,18 +97,25 @@
 
         public double CapacityVariantBundles(AssetBundleUtility.eVariantType variantType)
         {
-            BundleSizeInfo[] infos = Array.FindAll(m_BundleSizeInfos, (info) =>
-            {
-                return info.BundleName.Contains(string.Format(".{0}", variantType.ToString()));
-            });
+            double totalSize = 0;
 
-            double TotalLength = 0;
-            foreach (var info in infos)
+            if (Initialized)
             {
-                TotalLength += info.BundleSize;
+                BundleSizeInfo[] infos = Array.FindAll(m_BundleSizeInfos, (info) =>
+                {
+                    return info.BundleName.Contains(string.Format(".{0}", variantType.ToString()));
+                });
+
+                double TotalLength = 0;
+                foreach (var info in infos)
+                {
+                    TotalLength += info.BundleSize;
+                }
+
+                totalSize = Math.Round(Convert.ToDouble((TotalLength / 1024) / 1024));
             }
 
-            return Math.Round(Convert.ToDouble((TotalLength / 1024) / 1024));
+            return totalSize;
         }
 
         public void DownloadBundle(string bundleName, Action<AssetBundle> callback)
@@ -165,7 +159,7 @@
                             InsertBundle(remapName, bundle);
 
                             string[] dependencies = m_AssetManifest.GetAllDependencies(remapName);
-                            DependenciesDownload(new DownloadContainer(remapName, dependencies, callback));
+                            DependenciesDownload(new DependenciesContainer(remapName, dependencies, callback));
                         }
                         else
                         {
@@ -178,25 +172,63 @@
                 else
                 {
                     string[] dependencies = m_AssetManifest.GetAllDependencies(remapName);
-                    DependenciesDownload(new DownloadContainer(remapName, dependencies, callback));
+                    DependenciesDownload(new DependenciesContainer(remapName, dependencies, callback));
                 }
             }
         }
 
-        public void DownloadAssetBundles(string[] bundleNames)
+        public void DownloadAssetBundles(string[] bundleNames, Action<bool> callback)
         {
-
+            if (Initialized && bundleNames.NotEmpty())
+            {
+                InternalDownloadAssetBundles(new BundlesDownloadContainer(bundleNames, callback));
+            }
         }
 
-        private void DependenciesDownload(DownloadContainer container)
+        private void InternalDownloadAssetBundles(BundlesDownloadContainer container)
         {
-            if (container.Dependencies.Empty())
+            if (container.Bundles.Empty())
+            {
+                container.OnComplete(true);
+            }
+            else
+            {
+                string targetBundleName = RemapVariantName(container.Bundles.Pop());
+                if (DownloadedBundle(RemapVariantName(targetBundleName)).IsNull())
+                {
+                    Hash128 hash = m_AssetManifest.GetAssetBundleHash(targetBundleName);
+                    AssetBundleDownloader downloader = new AssetBundleDownloader(BaseUri, targetBundleName, hash, (bundle) =>
+                    {
+                        if (bundle.IsNotNull())
+                        {
+                            InsertBundle(targetBundleName, bundle);
+
+                            InternalDownloadAssetBundles(container);
+                        }
+                        else
+                        {
+                            container.OnComplete(false);
+                        }
+                    });
+
+                    StartCoroutine(downloader.Download());
+                }
+                else
+                {
+                    InternalDownloadAssetBundles(container);
+                }
+            }
+        }
+
+        private void DependenciesDownload(DependenciesContainer container)
+        {
+            if (container.Bundles.Empty())
             {
                 container.OnComplete(DownloadedBundle(container.BundleName));
             }
             else
             {
-                string targetBundleName = container.Dependencies.Pop();
+                string targetBundleName = RemapVariantName(container.Bundles.Pop());
                 if (DownloadedBundle(targetBundleName).IsNull())
                 {
                     Hash128 hash = m_AssetManifest.GetAssetBundleHash(targetBundleName);
@@ -225,7 +257,7 @@
         
         private IEnumerator InternalInitialize(Action<bool> callback)
         {
-            CheckCacheSize();
+            CacheSize();
 
             ManifestDownloader manifestDownloader = new ManifestDownloader(BaseUri, (manifest) =>
             {
@@ -264,7 +296,7 @@
             return 0;
         }
         
-        private void CheckCacheSize()
+        private void CacheSize()
         {
             string cacheSize = PlayerPrefs.GetString("maximumAvailableDiskSpace");
             if (cacheSize.IsNullOrEmpty() && cacheSize.Equals(m_CacheSize.ToString()).IsFalse())
