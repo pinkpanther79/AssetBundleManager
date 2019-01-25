@@ -351,17 +351,16 @@
         private string RemapVariantName(string bundleName)
         {
             string[] bundlesWithVariant = m_AssetManifest.GetAllAssetBundlesWithVariant();
+            string[] split = bundleName.Split('.');
 
             if (Array.FindIndex(bundlesWithVariant, (find) =>
             {
-                return find.Split('.')[0].Equals(bundleName);
+                return find.Split('.')[0].Equals(split[0]);
             }) < 0)
             {
                 return bundleName;
             }
-
-            string[] split = bundleName.Split('.');
-
+            
             int bestFit = int.MaxValue;
             int bestFitIndex = -1;
                 
