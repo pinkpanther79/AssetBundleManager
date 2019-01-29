@@ -9,7 +9,8 @@
     {
         /// TODO : here variable edit
         private static string AssetBundlesOutputPath = "AssetBundles";
-        private static string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Assets");
+        private static string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Resources");
+        private static string SceneRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Scenes");
         private static string BuiltInfomationFileName = "OriginalAssetBundles.txt";
         private static string BundleSizeFileName = "BundleSizeInfos.json";
 
@@ -90,7 +91,8 @@
         private static void ApplyAssetLabels()
         {
             UpdateResourceAssetLabels();
-            
+            UpdateSceneAssetLabels();
+
             AssetDatabase.RemoveUnusedAssetBundleNames();
         }
 
@@ -110,6 +112,18 @@
                         assetImporter.assetBundleVariant = variant;
                     }
                 }
+            }
+        }
+
+        public static void UpdateSceneAssetLabels()
+        {
+            DirectoryInfo sceneDirectory = new DirectoryInfo(SceneRootPath);
+            FileInfo[] files = sceneDirectory.GetFiles("*.unity", SearchOption.AllDirectories);
+            foreach (var file in files)
+            {
+                string path = file.FullName.Remove(0, file.FullName.IndexOf("Assets"));
+                AssetImporter assetImporter = AssetImporter.GetAtPath(path);
+                assetImporter.assetBundleName = AssetBundleUtility.MakeSceneName(file.Name);
             }
         }
 

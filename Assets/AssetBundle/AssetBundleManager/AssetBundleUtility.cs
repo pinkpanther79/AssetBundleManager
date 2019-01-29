@@ -25,7 +25,7 @@
         
         public static bool UseAssetBundles = false;
         public static char VariantDelimiter = '-';
-
+        
         private static eVariantType m_VariantType = eVariantType.hd;
         public static eVariantType VariantType
         {
@@ -97,6 +97,13 @@
             {
                 return string.Empty;
             }
+        }
+
+        public static string MakeSceneName(string fileName)
+        {
+            fileName = fileName.ToLower();
+
+            return string.Format("scene-{0}", fileName.Split('.')[0]);
         }
     }
 }

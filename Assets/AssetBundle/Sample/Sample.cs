@@ -16,9 +16,6 @@
         private string ResourcePath = string.Empty;
 
         [SerializeField]
-        private string SceneBundleName = string.Empty;
-
-        [SerializeField]
         private string SceneName = string.Empty;
 
         private void Start()
@@ -87,9 +84,9 @@
 
         public void OnClickLoadScene()
         {
-            AssetBundleManager.Instance.LoadScene(SceneBundleName, (success) =>
+            AssetBundleManager.Instance.LoadScene(AssetBundleUtility.MakeSceneName(SceneName), (success) =>
             {
-                InsertLogText(string.Format("OnClickLoadScene {0} : {1}", SceneBundleName, success));
+                InsertLogText(string.Format("OnClickLoadScene {0} : {1}", SceneName, success));
 
                 if (success)
                 {
