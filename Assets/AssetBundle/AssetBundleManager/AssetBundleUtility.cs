@@ -22,14 +22,7 @@
             hd = 0,
             sd,
         }
-
-        public enum eBundlePathType
-        { 
-            Root,
-            DivideFolders,
-            OnebyOne,
-        }
-
+        
         public static bool UseAssetBundles = false;
         public static char VariantDelimiter = '-';
 
@@ -61,14 +54,21 @@
                     return "Android";
             }
         }
-
+        
         public static string FindBundleName(string resourcePath)
         {
             resourcePath = resourcePath.ToLower();
 
             string[] token = resourcePath.Split('/');
 
-            return token[0];
+            if (token.Length >= 2)
+            {
+                return token[token.Length - 2];
+            }
+            else
+            {
+                return token[token.Length - 1];
+            }
         }
 
         public static string FindAssetName(string resourcePath)
@@ -82,12 +82,12 @@
 
         public static string AssetNameExcludeVariant(string directoryName)
         {
-            return directoryName.Split(AssetBundleUtility.VariantDelimiter)[0];
+            return directoryName.Split(VariantDelimiter)[0];
         }
 
         public static string VariantName(string directoryName)
         {
-            int index = directoryName.IndexOf(AssetBundleUtility.VariantDelimiter);
+            int index = directoryName.IndexOf(VariantDelimiter);
 
             if (index > 0)
             {

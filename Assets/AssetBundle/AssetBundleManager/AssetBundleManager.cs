@@ -196,6 +196,14 @@
             }
         }
 
+        public void LoadScene(string sceneName, Action<bool> callback)
+        {
+            DownloadBundleWithDependencies(sceneName, (bundle) =>
+            {
+                callback(bundle.IsNotNull());
+            });
+        }
+        
         public void DownloadAssetBundles(string[] bundleNames, Action<bool> callback)
         {
             if (Initialized && bundleNames.NotEmpty())

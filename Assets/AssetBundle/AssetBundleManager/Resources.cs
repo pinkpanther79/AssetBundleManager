@@ -8,10 +8,10 @@
         {
             if (AssetBundleUtility.UseAssetBundles)
             {
-                AssetBundleManager.Instance.LoadAsset(string.Empty, string.Empty, (obj) =>
+                AssetBundleManager.Instance.LoadAsset(AssetBundleUtility.FindBundleName(path), AssetBundleUtility.FindAssetName(path), (obj) =>
                 {
                     callback(obj);
-                });
+                }, dependencies);
             }
             else
             {
@@ -23,10 +23,10 @@
         {
             if (AssetBundleUtility.UseAssetBundles)
             {
-                AssetBundleManager.Instance.LoadAssetAsync(string.Empty, string.Empty, (request) =>
+                AssetBundleManager.Instance.LoadAssetAsync(AssetBundleUtility.FindBundleName(path), AssetBundleUtility.FindAssetName(path), (request) =>
                 {
                     callback(request);
-                });
+                }, dependencies);
             }
             else
             {

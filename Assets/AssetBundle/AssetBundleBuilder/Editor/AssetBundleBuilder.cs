@@ -12,7 +12,7 @@
         private static string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Assets");
         private static string BuiltInfomationFileName = "OriginalAssetBundles.txt";
         private static string BundleSizeFileName = "BundleSizeInfos.json";
-        
+
         [MenuItem("Assets/AssetBundles/Build AssetBundles For Android")]
         public static void BuildAssetBundlesForAndroid()
         {

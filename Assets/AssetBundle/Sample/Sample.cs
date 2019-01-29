@@ -13,10 +13,13 @@
         private string BaseUri = string.Empty;
 
         [SerializeField]
-        private string BundleName = string.Empty;
+        private string ResourcePath = string.Empty;
 
         [SerializeField]
-        private string AssetName = string.Empty;
+        private string SceneBundleName = string.Empty;
+
+        [SerializeField]
+        private string SceneName = string.Empty;
 
         private void Start()
         {
@@ -42,13 +45,13 @@
 
         public void OnClickLoadAsset()
         {
-            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(BundleName);
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(AssetBundleUtility.FindBundleName(ResourcePath));
 
             InsertLogText(string.Format("Download Size : {0}", downloadSize));
 
-            AssetBundleManager.Instance.LoadAsset(BundleName, AssetName, (obj) =>
+            Resources.Load(ResourcePath, (obj) =>
             {
-            InsertLogText(string.Format("OnLoadAsset {0} - {1} : {2}", BundleName, AssetName, obj.IsNotNull()));
+            InsertLogText(string.Format("OnLoadAsset {0} : {1}", ResourcePath, obj.IsNotNull()));
 
                 if (obj.IsNotNull())
                 {
@@ -63,13 +66,13 @@
 
         public void OnClickLoadAsyncAsset()
         {
-            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(BundleName);
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(AssetBundleUtility.FindBundleName(ResourcePath));
             
             InsertLogText(string.Format("Download Size : {0}", downloadSize));
 
-            AssetBundleManager.Instance.LoadAssetAsync(BundleName, AssetName, (request) =>
+            Resources.LoadAsync(ResourcePath, (request) =>
             {
-                InsertLogText(string.Format("OnLoadAsyncAsset {0}", request.IsNotNull()));
+                InsertLogText(string.Format("OnLoadAsyncAsset {0} : {1}", ResourcePath, request.IsNotNull()));
 
                 if (request.IsNotNull())
                 {
@@ -84,12 +87,21 @@
 
         public void OnClickLoadScene()
         {
+            AssetBundleManager.Instance.LoadScene(SceneBundleName, (success) =>
+            {
+                InsertLogText(string.Format("OnClickLoadScene {0} : {1}", SceneBundleName, success));
 
+                if (success)
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(SceneName);
+                }
+            });
         }
 
         public void OnClickLoadSceneAsync()
         {
 
+            //InsertLogText(string.Format("OnLoadAsyncAsset {0} : {1}", ResourcePath, request.IsNotNull()));
         }
 
         public void OnClickDownloadAllBundles()
