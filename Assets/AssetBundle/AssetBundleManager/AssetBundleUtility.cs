@@ -23,6 +23,16 @@
             sd,
         }
 
+        public enum eBundlePathType
+        { 
+            Root,
+            DivideFolders,
+            OnebyOne,
+        }
+
+        public static bool UseAssetBundles = false;
+        public static char VariantDelimiter = '-';
+
         private static eVariantType m_VariantType = eVariantType.hd;
         public static eVariantType VariantType
         {
@@ -49,6 +59,43 @@
                     return "iOS";
                 default:
                     return "Android";
+            }
+        }
+
+        public static string FindBundleName(string resourcePath)
+        {
+            resourcePath = resourcePath.ToLower();
+
+            string[] token = resourcePath.Split('/');
+
+            return token[0];
+        }
+
+        public static string FindAssetName(string resourcePath)
+        {
+            resourcePath = resourcePath.ToLower();
+
+            string[] token = resourcePath.Split('/');
+
+            return token[token.Length - 1];
+        }
+
+        public static string AssetNameExcludeVariant(string directoryName)
+        {
+            return directoryName.Split(AssetBundleUtility.VariantDelimiter)[0];
+        }
+
+        public static string VariantName(string directoryName)
+        {
+            int index = directoryName.IndexOf(AssetBundleUtility.VariantDelimiter);
+
+            if (index > 0)
+            {
+                return directoryName.Substring(index + 1).ToLower();
+            }
+            else
+            {
+                return string.Empty;
             }
         }
     }

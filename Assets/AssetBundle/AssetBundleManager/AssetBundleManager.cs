@@ -118,9 +118,95 @@
             return totalSize;
         }
 
-        public void DownloadBundle(string bundleName, Action<AssetBundle> callback)
+        public void LoadAsset(string bundleName, string assetName, Action<UnityEngine.Object> callback, bool withDependencies = true)
         {
+            UnityEngine.Object asset = null;
+
             if (Initialized)
+            {
+                if (withDependencies)
+                {
+                    DownloadBundleWithDependencies(bundleName, (bundle) =>
+                    {
+                        if (bundle.IsNotNull())
+                        {
+                            asset = bundle.LoadAsset(assetName);
+                        }
+
+                        callback(asset);
+                    });
+                }
+                else
+                {
+                    DownloadBundle(bundleName, (bundle) =>
+                    {
+                        if (bundle.IsNotNull())
+                        {
+                            asset = bundle.LoadAsset(assetName);
+                        }
+
+                        callback(asset);
+                    });
+                }
+            }
+            else
+            {
+                Debug.Log("Initialized is false!!");
+
+                callback(asset);
+            }
+        }
+
+        public void LoadAssetAsync(string bundleName, string assetName, Action<AssetBundleRequest> callback, bool withDependencies = true)
+        {
+            AssetBundleRequest asset = null;
+
+            if (Initialized)
+            {
+                if (withDependencies)
+                {
+                    DownloadBundleWithDependencies(bundleName, (bundle) =>
+                    {
+                        if (bundle.IsNotNull())
+                        {
+                            asset = bundle.LoadAssetAsync(assetName);
+                        }
+
+                        callback(asset);
+                    });
+                }
+                else
+                {
+                    DownloadBundle(bundleName, (bundle) =>
+                    {
+                        if (bundle.IsNotNull())
+                        {
+                            asset = bundle.LoadAssetAsync(assetName);
+                        }
+
+                        callback(asset);
+                    });
+                }
+            }
+            else
+            {
+                Debug.Log("Initialized is false!!");
+
+                callback(asset);
+            }
+        }
+
+        public void DownloadAssetBundles(string[] bundleNames, Action<bool> callback)
+        {
+            if (Initialized && bundleNames.NotEmpty())
+            {
+                InternalDownloadAssetBundles(new BundlesDownloadContainer(bundleNames, callback));
+            }
+        }
+
+        private void DownloadBundle(string bundleName, Action<AssetBundle> callback)
+        {
+            if (bundleName.IsValidText())
             {
                 string remapName = RemapVariantName(bundleName);
 
@@ -141,9 +227,13 @@
                     callback(DownloadedBundle(remapName));
                 }
             }
+            else
+            {
+                callback(null);
+            }
         }
 
-        public void DownloadBundleWithDependencies(string bundleName, Action<AssetBundle> callback)
+        private void DownloadBundleWithDependencies(string bundleName, Action<AssetBundle> callback)
         {
             if (Initialized)
             {
@@ -176,15 +266,7 @@
                 }
             }
         }
-
-        public void DownloadAssetBundles(string[] bundleNames, Action<bool> callback)
-        {
-            if (Initialized && bundleNames.NotEmpty())
-            {
-                InternalDownloadAssetBundles(new BundlesDownloadContainer(bundleNames, callback));
-            }
-        }
-
+        
         private void InternalDownloadAssetBundles(BundlesDownloadContainer container)
         {
             if (container.Bundles.Empty())

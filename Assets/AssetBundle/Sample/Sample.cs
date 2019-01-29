@@ -13,7 +13,10 @@
         private string BaseUri = string.Empty;
 
         [SerializeField]
-        private string AssetBundleName = string.Empty;
+        private string BundleName = string.Empty;
+
+        [SerializeField]
+        private string AssetName = string.Empty;
 
         private void Start()
         {
@@ -37,17 +40,17 @@
             });
         }
 
-        public void OnDownloadBundle()
+        public void OnClickLoadAsset()
         {
-            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(AssetBundleName);
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(BundleName);
 
             InsertLogText(string.Format("Download Size : {0}", downloadSize));
 
-            AssetBundleManager.Instance.DownloadBundle(AssetBundleName, (bundle) =>
+            AssetBundleManager.Instance.LoadAsset(BundleName, AssetName, (obj) =>
             {
-            InsertLogText(string.Format("DownloadBundle {0} : {1}", AssetBundleName, bundle.IsNotNull()));
+            InsertLogText(string.Format("OnLoadAsset {0} - {1} : {2}", BundleName, AssetName, obj.IsNotNull()));
 
-                if (bundle.IsNotNull())
+                if (obj.IsNotNull())
                 {
                     /// TODO : insert after actions
                 }
@@ -58,17 +61,17 @@
             });
         }
 
-        public void OnDownloadWithDependencies()
+        public void OnClickLoadAsyncAsset()
         {
-            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(AssetBundleName);
+            double downloadSize = AssetBundleManager.Instance.CapacityDownloadBundle(BundleName);
             
             InsertLogText(string.Format("Download Size : {0}", downloadSize));
 
-            AssetBundleManager.Instance.DownloadBundleWithDependencies(AssetBundleName, (success) =>
+            AssetBundleManager.Instance.LoadAssetAsync(BundleName, AssetName, (request) =>
             {
-                InsertLogText(string.Format("DownloadWithDependencies {0}", success));
+                InsertLogText(string.Format("OnLoadAsyncAsset {0}", request.IsNotNull()));
 
-                if (success)
+                if (request.IsNotNull())
                 {
                     /// TODO : insert after actions
                 }
@@ -77,6 +80,16 @@
                     /// TODO : insert retry actions
                 }
             });
+        }
+
+        public void OnClickLoadScene()
+        {
+
+        }
+
+        public void OnClickLoadSceneAsync()
+        {
+
         }
 
         public void OnClickDownloadAllBundles()

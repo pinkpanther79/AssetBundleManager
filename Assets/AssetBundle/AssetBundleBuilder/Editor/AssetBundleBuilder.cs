@@ -12,8 +12,7 @@
         private static string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Assets");
         private static string BuiltInfomationFileName = "OriginalAssetBundles.txt";
         private static string BundleSizeFileName = "BundleSizeInfos.json";
-        private static char VariantDelimiter = '-';
-
+        
         [MenuItem("Assets/AssetBundles/Build AssetBundles For Android")]
         public static void BuildAssetBundlesForAndroid()
         {
@@ -103,9 +102,9 @@
                 AssetImporter assetImporter = FindAssetImporter(directory.FullName);
                 if (assetImporter.IsNotNull())
                 {
-                    assetImporter.assetBundleName = FindAssetName(directory.Name);
+                    assetImporter.assetBundleName = AssetBundleUtility.AssetNameExcludeVariant(directory.Name);
 
-                    string variant = FindVariantName(directory.Name);
+                    string variant = AssetBundleUtility.VariantName(directory.Name);
                     if (variant.IsValidText())
                     {
                         assetImporter.assetBundleVariant = variant;
@@ -138,25 +137,6 @@
             string path = dirFullName.Remove(0, dirFullName.IndexOf("Assets"));
 
             return AssetImporter.GetAtPath(path);
-        }
-
-        public static string FindAssetName(string dirName)
-        {
-            return dirName.Split(VariantDelimiter)[0];
-        }
-
-        public static string FindVariantName(string dirName)
-        {
-            int index = dirName.IndexOf(VariantDelimiter);
-
-            if (index > 0)
-            {
-                return dirName.Substring(index + 1).ToLower();
-            }
-            else
-            {
-                return string.Empty;
-            }
         }
 
         private static void MakeAssetBundleInfomationFile()
