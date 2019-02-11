@@ -1,7 +1,7 @@
 ﻿namespace AssetBundle
 {
     using System.Collections;
-
+    
     public abstract class Downloader<T>
     {
         protected string m_Url;

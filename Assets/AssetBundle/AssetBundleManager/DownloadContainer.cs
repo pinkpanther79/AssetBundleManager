@@ -4,13 +4,13 @@
     using System;
     using UnityEngine;
 
-    internal abstract class DownloadContainer<T>
+    public abstract class DownloadContainer<T>
     {
         public Stack<string> Bundles;
         public Action<T> OnComplete;
     }
 
-    internal class BundlesDownloadContainer : DownloadContainer<bool>
+    public class BundlesDownloadContainer : DownloadContainer<bool>
     {
         public BundlesDownloadContainer(string[] dependencies, Action<bool> onComplete)
         {
@@ -27,7 +27,7 @@
         }
     }
 
-    internal class DependenciesContainer : DownloadContainer<AssetBundle>
+    public class DependenciesContainer : DownloadContainer<AssetBundle>
     {
         public string BundleName;
 

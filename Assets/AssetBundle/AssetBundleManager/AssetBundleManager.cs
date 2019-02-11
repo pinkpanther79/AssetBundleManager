@@ -68,19 +68,33 @@
             return needDownladBundles.ToArray();
         }
 
-        public double CapacityDownloadBundle(string bundleName)
+        public double DownloadCapacity(string bundleName)
         {
             double size = 0;
+            string remapName = RemapVariantName(bundleName);
 
             if (Initialized)
             {
-                size = DownloadCapacity(RemapVariantName(bundleName));
+                string url = string.Format("{0}/{1}", BaseUri, remapName);
+
+                if (BundleCached(url, remapName).IsFalse())
+                {
+                    BundleSizeInfo sizeinfo = Array.Find(m_BundleSizeInfos, (info) =>
+                    {
+                        return info.BundleName.Equals(remapName);
+                    });
+
+                    if (sizeinfo.IsNotNull())
+                    {
+                        size = Math.Round(Convert.ToDouble(sizeinfo.BundleSize / 1024));
+                    }
+                }
             }
 
             return size;
         }
 
-        public double CapacityDownloadBundles(string[] bundleName)
+        public double DownloadCapacity(string[] bundleName)
         {
             double totalSize = 0;
 
@@ -88,14 +102,14 @@
             {
                 foreach (var name in bundleName)
                 {
-                    totalSize = DownloadCapacity(RemapVariantName(name));
+                    totalSize += DownloadCapacity(name);
                 }
             }
 
             return totalSize;
         }
 
-        public double CapacityVariantBundles(AssetBundleUtility.eVariantType variantType)
+        public double DownloadCapacity(AssetBundleUtility.eVariantType variantType)
         {
             double totalSize = 0;
 
@@ -105,14 +119,11 @@
                 {
                     return info.BundleName.Contains(string.Format(".{0}", variantType.ToString()));
                 });
-
-                double TotalLength = 0;
+                
                 foreach (var info in infos)
                 {
-                    TotalLength += info.BundleSize;
+                    totalSize += DownloadCapacity(info.BundleName);
                 }
-
-                totalSize = Math.Round(Convert.ToDouble((TotalLength / 1024) / 1024));
             }
 
             return totalSize;
@@ -364,26 +375,6 @@
             yield return StartCoroutine(sizeDownloader.Download());
 
             callback(Initialized);
-        }
-        
-        private double DownloadCapacity(string bundleName)
-        {
-            string url = string.Format("{0}/{1}", BaseUri, bundleName);
-            
-            if (BundleCached(url, bundleName).IsFalse())
-            {
-                BundleSizeInfo sizeinfo = Array.Find(m_BundleSizeInfos, (info) =>
-                {
-                    return info.BundleName.Equals(bundleName);
-                });
-
-                if (sizeinfo.IsNotNull())
-                {
-                    return Math.Round(Convert.ToDouble(sizeinfo.BundleSize / 1024));
-                }
-            }
-
-            return 0;
         }
         
         private void CacheSize()

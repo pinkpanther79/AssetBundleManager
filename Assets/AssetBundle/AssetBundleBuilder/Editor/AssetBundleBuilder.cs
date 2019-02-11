@@ -14,7 +14,7 @@
         private static string BuiltInfomationFileName = "OriginalAssetBundles.txt";
         private static string BundleSizeFileName = "BundleSizeInfos.json";
 
-        [MenuItem("Assets/AssetBundles/Build AssetBundles For Android")]
+        [MenuItem("AssetBundles/Build AssetBundles For Android")]
         public static void BuildAssetBundlesForAndroid()
         {
             try
@@ -39,7 +39,7 @@
             }
         }
 
-        [MenuItem("Assets/AssetBundles/Build AssetBundles For iOS")]
+        [MenuItem("AssetBundles/Build AssetBundles For iOS")]
         public static void BuildAssetBundlesForiOS()
         {
             try
@@ -64,7 +64,7 @@
             }
         }
 
-        [MenuItem("Assets/AssetBundles/ClearAssetLabels")]
+        [MenuItem("AssetBundles/ClearAssetLabels")]
         private static void ClearAssetLabels()
         {
             string[] names = AssetDatabase.GetAllAssetBundleNames();
@@ -74,7 +74,7 @@
             }
         }
 
-        [MenuItem("Assets/AssetBundles/CleanCache")]
+        [MenuItem("AssetBundles/CleanCache")]
         public static void CleanCache()
         {
             Cache cache = Caching.currentCacheForWriting;
