@@ -15,7 +15,7 @@
         }
     }
 
-    public class AssetBundleUtility
+    public class Utilities
     {
         public enum eVariantType
         {

@@ -5,14 +5,39 @@
     using System.IO;
     using System.Collections.Generic;
 
+    public enum CompressOptions
+    {
+        Uncompressed = 0,
+        StandardCompression,
+        ChunkBasedCompression,
+    }
+
+    public class AssetBundlesBuildOptions
+    {
+        public CompressOptions CompressOption = CompressOptions.Uncompressed;
+        public bool ForceRebuildAssetBundle = true;
+        public bool StrictMode = true;
+        public bool ClearFolder = true;
+        public bool CopyToStreamingAssets = false;
+    }
+
     public static class AssetBundleBuilder
     {
+        private static string AssetBundlesOutputPath
+        {
+            get
+            {
+                return Path.Combine(AssetBundlesOutputRootName, Utilities.GetPlatformForAssetBundles(Application.platform));
+            }
+        }
+
         /// TODO : here variable edit
-        private static string AssetBundlesOutputPath = "AssetBundles";
-        private static string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Resources");
-        private static string SceneRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Scenes");
-        private static string BuiltInfomationFileName = "OriginalAssetBundles.txt";
-        private static string BundleSizeFileName = "BundleSizeInfos.json";
+        private static readonly string AssetBundlesOutputRootName = "AssetBundles";
+        private static readonly string AssetBundleOptionsFileName = "AssetBundleOptions";
+        private static readonly string AssetBundleRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Resources");
+        private static readonly string SceneRootPath = Path.Combine(Application.dataPath, "AssetBundle/Sample/Scenes");
+        private static readonly string BuiltInfomationFileName = "OriginalAssetBundles.txt";
+        private static readonly string BundleSizeFileName = "BundleSizeInfos.json";
 
         [MenuItem("AssetBundles/Build AssetBundles For Android")]
         public static void BuildAssetBundlesForAndroid()
@@ -21,15 +46,24 @@
             {
                 EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
 
-                MakeAssetBundleDirectory();
+                AssetBundlesBuildOptions options = GenerateBuildOptions();
+
+                ArrangeAssetBundleDirectory(options.ClearFolder);
 
                 ApplyAssetLabels();
 
-                MakeAssetBundleInfomationFile();
+                GenerateAssetBundleInfomationFile();
 
-                BuildPipeline.BuildAssetBundles(AssetBundlesOutputPath, BuildAssetBundleOptions.DeterministicAssetBundle, BuildTarget.Android);
+                BuildPipeline.BuildAssetBundles(AssetBundlesOutputPath, AssetBundleOptions(options), BuildTarget.Android);
 
                 MakeBundleSizeFile();
+
+                AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
+                if (options.CopyToStreamingAssets)
+                {
+                    EditorUtilities.DirectoryCopy(AssetBundlesOutputPath, Application.streamingAssetsPath);
+                }
             }
             catch (System.Exception e)
             {
@@ -46,15 +80,24 @@
             {
                 EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
 
-                MakeAssetBundleDirectory();
+                AssetBundlesBuildOptions options = GenerateBuildOptions();
+
+                ArrangeAssetBundleDirectory(options.ClearFolder);
 
                 ApplyAssetLabels();
 
-                MakeAssetBundleInfomationFile();
+                GenerateAssetBundleInfomationFile();
                 
-                BuildPipeline.BuildAssetBundles(AssetBundlesOutputPath, BuildAssetBundleOptions.DeterministicAssetBundle, BuildTarget.iOS);
+                BuildPipeline.BuildAssetBundles(AssetBundlesOutputPath, AssetBundleOptions(options), BuildTarget.iOS);
 
                 MakeBundleSizeFile();
+
+                AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
+
+                if (options.CopyToStreamingAssets)
+                {
+                    EditorUtilities.DirectoryCopy(AssetBundlesOutputPath, Application.streamingAssetsPath);
+                }
             }
             catch (System.Exception e)
             {
@@ -64,28 +107,21 @@
             }
         }
 
-        [MenuItem("AssetBundles/ClearAssetLabels")]
-        private static void ClearAssetLabels()
+        private static BuildAssetBundleOptions AssetBundleOptions(AssetBundlesBuildOptions options)
         {
-            string[] names = AssetDatabase.GetAllAssetBundleNames();
-            foreach (var name in names)
-            {
-                AssetDatabase.RemoveAssetBundleName(name, true);
-            }
-        }
+            BuildAssetBundleOptions resultOptions = ConvertCompressOption(options.CompressOption);
 
-        [MenuItem("AssetBundles/CleanCache")]
-        public static void CleanCache()
-        {
-            Cache cache = Caching.currentCacheForWriting;
-            if (cache.ClearCache())
+            if (options.StrictMode)
             {
-                EditorUtility.DisplayDialog("Success", "Success to clear cache.", "ok");
+                resultOptions = resultOptions | BuildAssetBundleOptions.StrictMode;
             }
-            else
+
+            if (options.ForceRebuildAssetBundle)
             {
-                EditorUtility.DisplayDialog("Failed", "Failed to clear cache.", "ok");
+                resultOptions = resultOptions | BuildAssetBundleOptions.ForceRebuildAssetBundle;
             }
+
+            return resultOptions;
         }
 
         private static void ApplyAssetLabels()
@@ -98,15 +134,15 @@
 
         public static void UpdateResourceAssetLabels()
         {
-            DirectoryInfo[] directories = FindDirectoryInfos(AssetBundleRootPath);
+            DirectoryInfo[] directories = EditorUtilities.FindDirectoryInfos(AssetBundleRootPath);
             foreach (var directory in directories)
             {
-                AssetImporter assetImporter = FindAssetImporter(directory.FullName);
+                AssetImporter assetImporter = EditorUtilities.FindAssetImporter(directory.FullName);
                 if (assetImporter.IsNotNull())
                 {
-                    assetImporter.assetBundleName = AssetBundleUtility.AssetNameExcludeVariant(directory.Name);
+                    assetImporter.assetBundleName = Utilities.AssetNameExcludeVariant(directory.Name);
 
-                    string variant = AssetBundleUtility.VariantName(directory.Name);
+                    string variant = Utilities.VariantName(directory.Name);
                     if (variant.IsValidText())
                     {
                         assetImporter.assetBundleVariant = variant;
@@ -123,37 +159,28 @@
             {
                 string path = file.FullName.Remove(0, file.FullName.IndexOf("Assets"));
                 AssetImporter assetImporter = AssetImporter.GetAtPath(path);
-                assetImporter.assetBundleName = AssetBundleUtility.MakeSceneName(file.Name);
+                assetImporter.assetBundleName = Utilities.MakeSceneName(file.Name);
             }
         }
 
-        private static void MakeAssetBundleDirectory()
+        private static void ArrangeAssetBundleDirectory(bool clearFolder)
         {
-            AssetBundlesOutputPath = Path.Combine(AssetBundlesOutputPath, AssetBundleUtility.GetPlatformForAssetBundles(Application.platform));
+            EditorUtilities.ClearFolder(Application.streamingAssetsPath);
 
-            if (!Directory.Exists(AssetBundlesOutputPath))
+            if (Directory.Exists(AssetBundlesOutputPath))
+            {
+                if (clearFolder)
+                {
+                    EditorUtilities.ClearFolder(AssetBundlesOutputPath);
+                }
+            }
+            else
             {
                 Directory.CreateDirectory(AssetBundlesOutputPath);
             }
         }
 
-        private static DirectoryInfo[] FindDirectoryInfos(string original)
-        {
-            DirectoryInfo info = new DirectoryInfo(original);
-            
-            DirectoryInfo[] infos = info.GetDirectories();
-
-            return infos;
-        }
-
-        private static AssetImporter FindAssetImporter(string dirFullName)
-        {
-            string path = dirFullName.Remove(0, dirFullName.IndexOf("Assets"));
-
-            return AssetImporter.GetAtPath(path);
-        }
-
-        private static void MakeAssetBundleInfomationFile()
+        private static void GenerateAssetBundleInfomationFile()
         {
             FileInfo file = new FileInfo(BuiltInfomationFileName);
 
@@ -166,6 +193,28 @@
                         tw.WriteLine(text);
                     }
                 }
+            }
+        }
+
+        private static AssetBundlesBuildOptions GenerateBuildOptions()
+        {
+            TextAsset jsonText = UnityEngine.Resources.Load(AssetBundleOptionsFileName) as TextAsset;
+            if (jsonText != null)
+            {
+                AssetBundlesBuildOptions GeneratedOptions = JsonUtility.FromJson<AssetBundlesBuildOptions>(jsonText.text);
+
+                if (GeneratedOptions != null)
+                {
+                    return GeneratedOptions;
+                }
+                else
+                {
+                    throw new System.Exception("BuildPlayer Exception : AssetBundlesBuildOptions is Null");
+                }
+            }
+            else
+            {
+                throw new System.Exception("BuildPlayer Exception : Make a AssetBundlesBuildOptions first");
             }
         }
 
@@ -221,6 +270,22 @@
             }
 
             return filePath;
+        }
+
+        private static BuildAssetBundleOptions ConvertCompressOption(CompressOptions compressOption)
+        {
+            if (compressOption == CompressOptions.Uncompressed)
+            {
+                return BuildAssetBundleOptions.UncompressedAssetBundle;
+            }
+            else if (compressOption == CompressOptions.ChunkBasedCompression)
+            {
+                return BuildAssetBundleOptions.ChunkBasedCompression;
+            }
+            else
+            {
+                return BuildAssetBundleOptions.None;
+            }
         }
     }
 }

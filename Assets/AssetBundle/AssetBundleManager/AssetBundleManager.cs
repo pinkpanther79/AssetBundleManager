@@ -40,7 +40,7 @@
         private void MakeBaseUri(string baseUri)
         {
             /// TODO : make custom base uri
-            BaseUri = string.Format("{0}/{1}/assetbundles", baseUri, AssetBundleUtility.GetPlatformForAssetBundles(Application.platform));
+            BaseUri = string.Format("{0}/{1}/assetbundles", baseUri, Utilities.GetPlatformForAssetBundles(Application.platform));
         }
 
         public string[] DownloadList()
@@ -109,7 +109,7 @@
             return totalSize;
         }
 
-        public double DownloadCapacity(AssetBundleUtility.eVariantType variantType)
+        public double DownloadCapacity(Utilities.eVariantType variantType)
         {
             double totalSize = 0;
 
@@ -399,7 +399,8 @@
         
         private AssetBundle DownloadedBundle(string bundleName)
         {
-            m_AssetBundles.TryGetValue(bundleName, out AssetBundle bundle);
+            AssetBundle bundle;
+            m_AssetBundles.TryGetValue(bundleName, out bundle);
 
             return bundle;
         }
@@ -450,7 +451,7 @@
                 string[] curSplit = bundlesWithVariant[i].Split('.');
                 if (curSplit[0] == split[0])
                 {
-                    int found = AssetBundleUtility.VariantType.ToString().IndexOf(curSplit[1]);
+                    int found = Utilities.VariantType.ToString().IndexOf(curSplit[1]);
                     if (found != -1 && found < bestFit)
                     {
                         bestFit = found;

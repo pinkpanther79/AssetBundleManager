@@ -42,7 +42,7 @@
 
         public void OnClickLoadAsset()
         {
-            double downloadSize = AssetBundleManager.Instance.DownloadCapacity(AssetBundleUtility.FindBundleName(ResourcePath));
+            double downloadSize = AssetBundleManager.Instance.DownloadCapacity(Utilities.FindBundleName(ResourcePath));
 
             InsertLogText(string.Format("Download Size : {0}", downloadSize));
 
@@ -63,7 +63,7 @@
 
         public void OnClickLoadAsyncAsset()
         {
-            double downloadSize = AssetBundleManager.Instance.DownloadCapacity(AssetBundleUtility.FindBundleName(ResourcePath));
+            double downloadSize = AssetBundleManager.Instance.DownloadCapacity(Utilities.FindBundleName(ResourcePath));
             
             InsertLogText(string.Format("Download Size : {0}", downloadSize));
 
@@ -84,7 +84,7 @@
 
         public void OnClickLoadScene()
         {
-            AssetBundleManager.Instance.LoadScene(AssetBundleUtility.MakeSceneName(SceneName), (success) =>
+            AssetBundleManager.Instance.LoadScene(Utilities.MakeSceneName(SceneName), (success) =>
             {
                 InsertLogText(string.Format("OnClickLoadScene {0} : {1}", SceneName, success));
 
@@ -97,13 +97,13 @@
 
         public void OnClickLoadSceneAsync()
         {
-            AssetBundleManager.Instance.LoadScene(AssetBundleUtility.MakeSceneName(SceneName), (success) =>
+            AssetBundleManager.Instance.LoadScene(Utilities.MakeSceneName(SceneName), (success) =>
             {
                 InsertLogText(string.Format("OnClickLoadScene {0} : {1}", SceneName, success));
 
                 if (success)
                 {
-                     AsyncOperation async = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(SceneName);
+                    AsyncOperation async = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(SceneName);
                 }
             });
         }

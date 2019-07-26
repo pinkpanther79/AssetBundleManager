@@ -9,18 +9,18 @@
 
         static AssetBundleSettings()
         {
-            AssetBundleUtility.UseAssetBundles = EditorPrefs.GetBool(UseAssetBundleMenuName, true);
+            Utilities.UseAssetBundles = EditorPrefs.GetBool(UseAssetBundleMenuName, true);
 
             EditorApplication.delayCall += () => 
             {
-                PerformAction(AssetBundleUtility.UseAssetBundles);
+                PerformAction(Utilities.UseAssetBundles);
             };
         }
 
         [MenuItem(UseAssetBundleMenuName)]
         private static void ToggleAction()
         {
-            PerformAction(!AssetBundleUtility.UseAssetBundles);
+            PerformAction(!Utilities.UseAssetBundles);
         }
 
         public static void PerformAction(bool enabled)
@@ -29,7 +29,7 @@
          
             EditorPrefs.SetBool(UseAssetBundleMenuName, enabled);
 
-            AssetBundleUtility.UseAssetBundles = enabled;
+            Utilities.UseAssetBundles = enabled;
         }
     }
 }

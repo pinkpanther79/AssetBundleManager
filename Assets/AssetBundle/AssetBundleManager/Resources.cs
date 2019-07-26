@@ -6,9 +6,9 @@
     {
         public static void Load(string path, System.Action<Object> callback, bool dependencies = true)
         {
-            if (AssetBundleUtility.UseAssetBundles)
+            if (Utilities.UseAssetBundles)
             {
-                AssetBundleManager.Instance.LoadAsset(AssetBundleUtility.FindBundleName(path), AssetBundleUtility.FindAssetName(path), (obj) =>
+                AssetBundleManager.Instance.LoadAsset(Utilities.FindBundleName(path), Utilities.FindAssetName(path), (obj) =>
                 {
                     callback(obj);
                 }, dependencies);
@@ -21,9 +21,9 @@
 
         public static void LoadAsync(string path, System.Action<AsyncOperation> callback, bool dependencies = true)
         {
-            if (AssetBundleUtility.UseAssetBundles)
+            if (Utilities.UseAssetBundles)
             {
-                AssetBundleManager.Instance.LoadAssetAsync(AssetBundleUtility.FindBundleName(path), AssetBundleUtility.FindAssetName(path), (request) =>
+                AssetBundleManager.Instance.LoadAssetAsync(Utilities.FindBundleName(path), Utilities.FindAssetName(path), (request) =>
                 {
                     callback(request);
                 }, dependencies);

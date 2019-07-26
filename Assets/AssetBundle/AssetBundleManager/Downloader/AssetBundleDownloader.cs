@@ -26,7 +26,7 @@
         public override IEnumerator Download()
         {
             AssetBundle bundle = null;
-            using (UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle(m_Url, m_Hash, 0))
+            using (UnityWebRequest www = UnityWebRequest.GetAssetBundle(m_Url, m_Hash, 0))
             {
                 yield return www.SendWebRequest();
 
