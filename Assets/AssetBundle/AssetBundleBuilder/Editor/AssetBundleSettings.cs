@@ -1,6 +1,5 @@
 ﻿namespace AssetBundle
 {
-    using UnityEngine;
     using UnityEditor;
 
     public static class AssetBundleSettings

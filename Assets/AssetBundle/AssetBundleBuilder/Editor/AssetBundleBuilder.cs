@@ -39,7 +39,7 @@
         private static readonly string BuiltInfomationFileName = "OriginalAssetBundles.txt";
         private static readonly string BundleSizeFileName = "BundleSizeInfos.json";
 
-        [MenuItem("AssetBundles/Build AssetBundles For Android")]
+        [MenuItem("AssetBundles/Build/Build AssetBundles For Android")]
         public static void BuildAssetBundlesForAndroid()
         {
             try
@@ -73,7 +73,7 @@
             }
         }
 
-        [MenuItem("AssetBundles/Build AssetBundles For iOS")]
+        [MenuItem("AssetBundles/Build/Build AssetBundles For iOS")]
         public static void BuildAssetBundlesForiOS()
         {
             try
